@@ -355,9 +355,9 @@ massage into the shadow DOM and hid it by *CSS*. With Lit the shadow DOM gets
 re-rendered. We either render the card or the error, one at a time.
 
 The click event listener is connected just like the change event listener in the
-editor. Imperative naming helps to differ functions from properties. Mind
-that the namespace is also shared with the parent classes. Compared to the
-previous tutorials I don't lifecycle and jobs anymore for the event listeners.
+editor. Imperative naming helps to differ functions from properties. Mind that
+the namespace is also shared with the parent classes. Compared to the previous
+tutorials I don't differ lifecycle and jobs anymore for the event listeners.
 With *Lit* I prefer a more declarative structure of the class.
 
 ## Lifecycle
