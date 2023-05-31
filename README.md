@@ -152,8 +152,8 @@ observe. *Lit* will automatically create a setter and a getter (on the level
 of the prototype).
 
 I added the `hass` object to talk about it, but I commented it out. It would
-trigger the rendering process upon each update of it's values. We don't need it
-for the editor at all. So a very simple solution is not to observe it at all.
+trigger the rendering process for every change of an unrelated entity. We don't
+need it for the editor at all. The most simple solution is not to observe it.
 *Home Assistant* doesn't complain.
 
 On the other hand the `config` object is not shared between cards and we are
