@@ -36,6 +36,8 @@ pitfalls and how to avoid them.
 * setting up the core developers container (tutorial 01)
 * setting up an npm based project (tutorial 08)
 
+Find all sources inside the `src/` folder!
+
 ## About Lit
 
 Like *HTMLElement* the *LitElement* is a parent class that you can use to build
@@ -74,8 +76,8 @@ performance.
 
 ### Installation
 
-There are multiple approaches to install *Lit*. Visit it's homepage to learn
-more. In this tutorial we will ue the toolchain of the previous tutorial
+There are multiple approaches to install *Lit*. Visit its homepage to learn
+more. In this tutorial we will use the toolchain of the previous tutorial
 (*Node*, *Npm*) to get it running.
 
 Open your shell inside the projects folder, for example `cd /workspaces/ha.core/config/www/tutor/09.toggle-card-lit`. Then call `npm install lit`.
