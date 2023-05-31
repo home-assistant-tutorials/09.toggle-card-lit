@@ -669,67 +669,68 @@ var $040001cdf6cad6dd$export$2e2bcd8739ae039 = (0, $def2de46b9306e8a$export$dbf3
 
 
 class $bf513b85805031e6$export$f7ff0c9b63908086 extends (0, $ab210b2da7b39b9d$export$3f2f9f5909897157) {
-    // reactive properties
+    // private property
+    _hass;
+    // internal reactive states
     static get properties() {
         return {
-            header: {
-                type: String
+            _header: {
+                state: true
             },
-            entity: {
-                type: String
+            _entity: {
+                state: true
             },
-            name: {
-                type: String
+            _name: {
+                state: true
             },
-            state: {
-                type: Object
+            _state: {
+                state: true
             },
-            status: {
-                type: String
+            _status: {
+                state: true
             }
         };
     }
-    // private property
-    _hass;
-    // lifecycle
+    // lifecycle interface
     setConfig(config) {
-        this.header = config.header;
-        this.entity = config.entity;
+        this._header = config.header;
+        this._entity = config.entity;
         // call set hass() to immediately adjust to a changed entity
         // while editing the entity in the card editor
         if (this._hass) this.hass = this._hass;
     }
     set hass(hass) {
         this._hass = hass;
-        this.state = hass.states[this.entity];
-        if (this.state) {
-            this.status = this.state.state;
-            let fn = this.state.attributes.friendly_name;
-            this.name = fn ? fn : this.entity;
+        this._state = hass.states[this._entity];
+        if (this._state) {
+            this._status = this._state.state;
+            let fn = this._state.attributes.friendly_name;
+            this._name = fn ? fn : this._entity;
         }
     }
     // declarative part
     static styles = (0, $040001cdf6cad6dd$export$2e2bcd8739ae039);
     render() {
+        console.log("RENDER");
         let content;
-        if (!this.state) content = (0, $f58f44579a4747ac$export$c0bb0b647f701bb5)`
+        if (!this._state) content = (0, $f58f44579a4747ac$export$c0bb0b647f701bb5)`
                 <p class="error">
-                    ${this.entity} is unavailable.
+                    ${this._entity} is unavailable.
                 </p>
             `;
         else content = (0, $f58f44579a4747ac$export$c0bb0b647f701bb5)`
                 <dl class="dl">
-                    <dt class="dt">${this.name}</dt>
+                    <dt class="dt">${this._name}</dt>
                     <dd class="dd" @click="${this.doToggle}">
-                        <span class="toggle ${this.status}">
+                        <span class="toggle ${this._status}">
                             <span class="button"></span>
                         </span>
-                        <span class="value">${this.status}</span>
+                        <span class="value">${this._status}</span>
                     </dd>
                 </dl>
             `;
         return (0, $f58f44579a4747ac$export$c0bb0b647f701bb5)`
-            <ha-card header="${this.header}">
+            <ha-card header="${this._header}">
                 <div class="card-content">
                     ${content}
                 </div>
@@ -739,7 +740,7 @@ class $bf513b85805031e6$export$f7ff0c9b63908086 extends (0, $ab210b2da7b39b9d$ex
     // event handling
     doToggle(event) {
         this._hass.callService("input_boolean", "toggle", {
-            entity_id: this.entity
+            entity_id: this._entity
         });
     }
     // card configuration
@@ -759,14 +760,14 @@ class $bf513b85805031e6$export$f7ff0c9b63908086 extends (0, $ab210b2da7b39b9d$ex
 class $fc7d6e547b6fcb14$export$75cd0973e9e8c42e extends (0, $ab210b2da7b39b9d$export$3f2f9f5909897157) {
     static get properties() {
         return {
-            // hass: { type: Object },
-            config: {
-                type: Object
+            // hass: {},
+            _config: {
+                state: true
             }
         };
     }
     setConfig(config) {
-        this.config = config;
+        this._config = config;
     }
     static styles = (0, $def2de46b9306e8a$export$dbf350e5966cf602)`
             .table {
@@ -787,20 +788,20 @@ class $fc7d6e547b6fcb14$export$75cd0973e9e8c42e extends (0, $ab210b2da7b39b9d$ex
                     <label class="label cell" for="header">Header:</label>
                     <input
                         @change="${this.handleChangedEvent}"
-                        class="value cell" id="header" value="${this.config.header}"></input>
+                        class="value cell" id="header" value="${this._config.header}"></input>
                 </div>
                 <div class="row">
                     <label class="label cell" for="entity">Entity:</label>
                     <input
                         @change="${this.handleChangedEvent}"
-                        class="value cell" id="entity" value="${this.config.entity}"></input>
+                        class="value cell" id="entity" value="${this._config.entity}"></input>
                 </div>
             </form>
         `;
     }
     handleChangedEvent(changedEvent) {
-        // this.config is readonly, copy needed
-        var newConfig = Object.assign({}, this.config);
+        // this._config is readonly, copy needed
+        var newConfig = Object.assign({}, this._config);
         if (changedEvent.target.id == "header") newConfig.header = changedEvent.target.value;
         else if (changedEvent.target.id == "entity") newConfig.entity = changedEvent.target.value;
         const messageEvent = new CustomEvent("config-changed", {

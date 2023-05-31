@@ -132,34 +132,45 @@ called *tags*. Tagging a literal causes the literal to be processed by the
 related functions. *Lit* uses tagged literals for the *CSS* and *HTML*
 templates. See below.
 
-### Reactive properties
+### Reactive properties and states
 
 ```js
     static get properties() {
         return {
-            // hass: { type: Object },
-            config: { type: Object },
+            // hass: {},
+            _config: { state: true },
         };
     }
 
     setConfig(config) {
-        this.config = config;
+        this._config = config;
     }
 ```
 
 The static function `static get properties()` declares the properties to
-observe. *Lit* will automatically create a setter and a getter.
+observe. *Lit* will automatically create a setter and a getter (on the level
+of the prototype).
 
 I added the `hass` object to talk about it, but I commented it out. It would
 trigger the rendering process upon each update of it's values. We don't need it
 for the editor at all. So a very simple solution is not to observe it at all.
 *Home Assistant* doesn't complain.
 
-On the other hand the `config` object is specific for the card and we are
+On the other hand the `config` object is not shared between cards and we are
 interested in all of it's updates. We can register it right away as a reactive
-property. We have to declare the type as `Object`. *Home Assistant* calls
-`setConfig(config)` not `set config()`, though. Therefore we need to redirect it
-to the setter as `this.config`. Changes will trigger an update.
+property. *Home Assistant* calls `setConfig(config)` not `set config(config)`,
+though. Therefore we need to redirect it to the setter as `this._config =
+config`. As *Home Assistant* never calls the setter directly from outside we
+treat the property as internal.
+
+*Internal reactive properties* are also addressed as *internal reactive states*.
+The option `{ state: true }` tells *Lit* that `this._config` it is an internal
+reactive state and not a part of the public interface of the class. The
+underscore is just a convention for "private" properties.
+
+It would work without making it explicitly internal. However, this is the
+approach *Lit* suggests for reactive properties that are not part of the public
+interface. Actually we don't use *public reactive properties* at all.
 
 ### CSS
 
@@ -193,13 +204,13 @@ variables into CSS typically isn't the best of possible solution.
                     <label class="label cell" for="header">Header:</label>
                     <input
                         @change="${this.handleChangedEvent}"
-                        class="value cell" id="header" value="${this.config.header}"></input>
+                        class="value cell" id="header" value="${this._config.header}"></input>
                 </div>
                 <div class="row">
                     <label class="label cell" for="entity">Entity:</label>
                     <input
                         @change="${this.handleChangedEvent}"
-                        class="value cell" id="entity" value="${this.config.entity}"></input>
+                        class="value cell" id="entity" value="${this._config.entity}"></input>
                 </div>
             </form>
         `;
@@ -210,7 +221,7 @@ The render method is called, when the view needs to be updated. Again the
 template literal is tagged (`html`). It produces the expected data type and
 does process the literal.
 
-The values of `this.config.header` and `this.config.entity` are inserted to
+The values of `this._config.header` and `this._config.entity` are inserted to
 update the content. This are simple expressions. Many expressions are possible
 inside `${...}`. [See here](https://lit.dev/docs/templates/expressions/).
 
@@ -220,14 +231,14 @@ expression.  The event handling function is connected like this
 to the event listener by this declarative approach.
 
 Find the full documentation of Templates
-[here](https://lit.dev/docs/templates/overview/).[
+[here](https://lit.dev/docs/templates/overview/).
 
 ### Event listener
 
 ```js
     handleChangedEvent(changedEvent) {
         // this._config is readonly, copy needed
-        var newConfig = Object.assign({}, this.config);
+        var newConfig = Object.assign({}, this._config);
         if (changedEvent.target.id == "header") {
             newConfig.header = changedEvent.target.value;
         } else if (changedEvent.target.id == "entity") {
@@ -242,8 +253,7 @@ Find the full documentation of Templates
     }
 ```
 
-The event handler with event dispatching `config-changed` keeps the same as in
-the previous tutorials. Just `this._config` changed to `this.config`.
+The event handler keeps the same as in the previous tutorials.
 
 ## The card
 
@@ -252,27 +262,55 @@ the previous tutorials. Just `this._config` changed to `this.config`.
 As explained before we don't want to observe the *hass* object as a reactive
 property. Else the card would update for each unrelated change in *hass*.
 Instead we keep a reference to it as a private property. We will need it to
-toggle the the state of the helper entity.
+toggle the the state of the helper entity later on.
 
 ```js
     // private property
     _hass;
 
-    // reactive properties
+    // internal reactive states
     static get properties() {
         return {
-            header: { type: String },
-            entity: { type: String },
-            name: { type: String },
-            state: { type: Object },
-            status: { type: String }
+            _header: { state: true },
+            _entity: { state: true },
+            _name: { state: true },
+            _state: { state: true },
+            _status: { state: true }
         };
     }
 ```
 
-The reactive properties are specific. They all are used within the HTML
-template. `state` holds the state object of the card. `status` is the status of
-the toggle, `on` or `off`.
+The internal reactive states are specific compared to the `hass` object. They
+all are used directly within the HTML template. If one of them changes, the
+rendering cycle gets triggered. `_state` holds the state object of the card.
+`_status` is the status of the toggle, `on` or `off`.
+
+## Lifecycle interface
+
+`setConfig(conf)` and `set hass(hass)` are the lifecycle interfaces with *Home
+Assistant*. Here we connect the internal reactive states.
+
+```js
+    setConfig(config) {
+        this._header = config.header;
+        this._entity = config.entity;
+        // call set hass() to immediately adjust to a changed entity
+        // while editing the entity in the card editor
+        if (this._hass) {
+            this.hass = this._hass
+        }
+    }
+
+    set hass(hass) {
+        this._hass = hass;
+        this._state = hass.states[this._entity];
+        if (this._state) {
+            this._status = this._state.state;
+            let fn = this._state.attributes.friendly_name;
+            this._name = fn ? fn : this._entity;
+        }
+    }
+```
 
 ### CSS
 
@@ -323,27 +361,27 @@ finally is inserted into an outer part.
 ```js
     render() {
         let content;
-        if (!this.state) {
+        if (!this._state) {
             content = html`
                 <p class="error">
-                    ${this.entity} is unavailable.
+                    ${this._entity} is unavailable.
                 </p>
             `;
         } else {
             content = html`
                 <dl class="dl">
-                    <dt class="dt">${this.name}</dt>
+                    <dt class="dt">${this._name}</dt>
                     <dd class="dd" @click="${this.doToggle}">
-                        <span class="toggle ${this.status}">
+                        <span class="toggle ${this._status}">
                             <span class="button"></span>
                         </span>
-                        <span class="value">${this.status}</span>
+                        <span class="value">${this._status}</span>
                     </dd>
                 </dl>
             `;
         }
         return html`
-            <ha-card header="${this.header}">
+            <ha-card header="${this._header}">
                 <div class="card-content">
                     ${content}
                 </div>
@@ -370,30 +408,8 @@ With *Lit* I prefer a more declarative structure of the class.
 
     doToggle(event) {
         this._hass.callService("input_boolean", "toggle", {
-            entity_id: this.entity
+            entity_id: this._entity
         });
-    }
-```
-
-## Lifecycle interface
-
-`setConfig(conf)` and `set hass(hass)` are the lifecycle interfaces with *Home
-Assistant*. Here we connect the well chosen reactive properties.
-
-```js
-    setConfig(config) {
-        this.header = config.header;
-        this.entity = config.entity;
-    }
-
-    set hass(hass) {
-        this._hass = hass;
-        this.state = hass.states[this.entity];
-        if (this.state) {
-            this.status = this.state.state;
-            let fn = this.state.attributes.friendly_name;
-            this.name = fn ? fn : this.entity;
-        }
     }
 ```
 
@@ -411,8 +427,8 @@ setting the private reference `this._hass`.
 
 ```js
     setConfig(config) {
-        this.header = config.header;
-        this.entity = config.entity;
+        this._header = config.header;
+        this._entity = config.entity;
         // call set hass() to immediately adjust to a changed entity
         // while editing the entity in the card editor
         if (this._hass) {
