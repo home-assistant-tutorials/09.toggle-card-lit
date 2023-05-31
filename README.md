@@ -271,7 +271,8 @@ toggle the the state of the helper entity.
 ```
 
 The reactive properties are specific. They all are used within the HTML
-template.
+template. `state` holds the state object of the card. `status` is the status of
+the toggle, `on` or `off`.
 
 ### CSS
 
@@ -374,7 +375,7 @@ With *Lit* I prefer a more declarative structure of the class.
     }
 ```
 
-## Lifecycle
+## Lifecycle interface
 
 `setConfig(conf)` and `set hass(hass)` are the lifecycle interfaces with *Home
 Assistant*. Here we connect the well chosen reactive properties.

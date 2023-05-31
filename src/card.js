@@ -17,7 +17,7 @@ export class ToggleCardLit extends LitElement {
     // private property
     _hass;
 
-    // lifecycle
+    // lifecycle interface
     setConfig(config) {
         this.header = config.header;
         this.entity = config.entity;
@@ -72,7 +72,6 @@ export class ToggleCardLit extends LitElement {
     }
 
     // event handling
-
     doToggle(event) {
         this._hass.callService("input_boolean", "toggle", {
             entity_id: this.entity
