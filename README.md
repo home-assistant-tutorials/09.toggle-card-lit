@@ -2,7 +2,7 @@
 
 # Toggle Card With Lit
 
-![parcel watch](img/lit.png)
+![Lit Logo](img/lit.png)
 
 Using Lit for the toggle card
 
@@ -209,8 +209,8 @@ template literal is tagged (`html`). It produces the expected data type and
 does process the literal.
 
 The values of `this.config.header` and `this.config.entity` are inserted to
-update the content. This are simple expressions. Many expressions are
-possible inside `${...}`. [See here](https://lit.dev/docs/templates/expressions/).
+update the content. This are simple expressions. Many expressions are possible
+inside `${...}`. [See here](https://lit.dev/docs/templates/expressions/).
 
 The `@` expression is used to add event listeners, here the `@change`
 expression.  The event handling function is connected like this
@@ -242,3 +242,167 @@ Find the full documentation of Templates
 
 The event handler with event dispatching `config-changed` keeps the same as in
 the previous tutorials. Just `this._config` changed to `this.config`.
+
+## The card
+
+## Properties
+
+As explained before we don't want to observe the *hass* object as a reactive
+property. Else the card would update for each unrelated change in *hass*.
+Instead we keep a reference to it as a private property. We need it to toggle
+the the state of the helper entity.
+
+```js
+    // private property
+    _hass;
+
+    // reactive properties
+    static get properties() {
+        return {
+            header: { type: String },
+            entity: { type: String },
+            name: { type: String },
+            state: { type: Object },
+            status: { type: String }
+        };
+    }
+```
+
+The reactive properties are specific. They all are used within the HTML
+template.
+
+### CSS
+
+In this example I show how to keep a larger style sheet in a separate file
+and making it importable. The CSS goes into `card.styles.js`.
+
+```js
+import { css } from 'lit';
+
+export default css`
+    .error {
+        color: red;
+    }
+    [ ... ]
+`;
+```
+
+It only imports `css` from `lit` to tag the style into the expected data
+structure. The style is not dynamic otherwise. No reference the the card is
+needed.
+
+In `card.js` the style is then imported like this
+
+```js
+import styles from './card.styles';
+```
+
+and used like that.
+
+```js
+class [...] {
+    [ ... ]
+    static styles = styles;
+    [ ... ]
+}
+```
+
+### HTML
+
+The template is triggered by the reactive properties to draw them. While it is
+possible to write the logic into the literals, I prefer to keep the logic rather
+outside, so the literals themselves stay simple.
+
+You learn how the `html` literal can be composed of other `html` literals. In
+this example the inner part get's stored into a variable named `content`. It
+finally is inserted into an outer part.
+
+```js
+    render() {
+        let content;
+        if (!this.state) {
+            content = html`
+                <p class="error">
+                    ${this.entity} is unavailable.
+                </p>
+            `;
+        } else {
+            content = html`
+                <dl class="dl">
+                    <dt class="dt">${this.name}</dt>
+                    <dd class="dd" @click="${this.doToggle}">
+                        <span class="toggle ${this.status}">
+                            <span class="button"></span>
+                        </span>
+                        <span class="value">${this.status}</span>
+                    </dd>
+                </dl>
+            `;
+        }
+        return html`
+            <ha-card header="${this.header}">
+                <div class="card-content">
+                    ${content}
+                </div>
+            </ha-card>
+        `;
+    }
+```
+
+Depending on the availability of the `state` object, either the card is
+displayed or the error message. In the previous tutorials we prepared the error
+massage into the shadow DOM and hid it by *CSS*. With Lit the shadow DOM gets
+re-rendered. We either render the card or the error, one at a time.
+
+The click event listener is connected just like the change event listener in the
+editor. Imperative naming helps to differ functions from properties. Mind
+that the namespace is also shared with the parent classes. Compared to the
+previous tutorials I don't lifecycle and jobs anymore for the event listeners.
+With *Lit* I prefer a more declarative structure of the class.
+
+## Lifecycle
+
+`setConfig(conf)` and `set hass(hass)` are the lifecycle interfaces with *Home
+Assistant*. Here we connect the well chosen reactive properties.
+
+```js
+    setConfig(config) {
+        this.header = config.header;
+        this.entity = config.entity;
+    }
+
+    set hass(hass) {
+        this._hass = hass;
+        this.state = hass.states[this.entity];
+        if (this.state) {
+            this.status = this.state.state;
+            let fn = this.state.attributes.friendly_name;
+            this.name = fn ? fn : this.entity;
+        }
+    }
+```
+
+## Finetuning
+
+There is still an issue. When we edit the entity the preview of the card does
+not update automatically to display the new entity. I think that is a bug (or
+missing feature) of *Home Assistant* at the moment of writing.
+
+![Editor](img/editor.png)
+
+After calling `setConfig(config)` it does not automatically call `set
+hass(hass)` to update the new entity. The workaround is to trigger it by
+setting the private reference `this._hass`.
+
+```js
+    setConfig(config) {
+        this.header = config.header;
+        this.entity = config.entity;
+        // call set hass() to immediately adjust to a changed entity
+        // while editing the entity in the card editor
+        if (this._hass) {
+            this.hass = this._hass
+        }
+    }
+```
+

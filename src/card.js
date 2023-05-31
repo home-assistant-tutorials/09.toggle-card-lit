@@ -3,9 +3,6 @@ import styles from './card.styles';
 
 export class ToggleCardLit extends LitElement {
 
-    // private property
-    _hass;
-
     // reactive properties
     static get properties() {
         return {
@@ -16,6 +13,9 @@ export class ToggleCardLit extends LitElement {
             status: { type: String }
         };
     }
+
+    // private property
+    _hass;
 
     // lifecycle
     setConfig(config) {
@@ -53,7 +53,7 @@ export class ToggleCardLit extends LitElement {
             content = html`
                 <dl class="dl">
                     <dt class="dt">${this.name}</dt>
-                    <dd class="dd" @click="${this.onClick}">
+                    <dd class="dd" @click="${this.doToggle}">
                         <span class="toggle ${this.status}">
                             <span class="button"></span>
                         </span>
@@ -73,7 +73,7 @@ export class ToggleCardLit extends LitElement {
 
     // event handling
 
-    onClick(event) {
+    doToggle(event) {
         this._hass.callService("input_boolean", "toggle", {
             entity_id: this.entity
         });

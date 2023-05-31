@@ -669,8 +669,6 @@ var $040001cdf6cad6dd$export$2e2bcd8739ae039 = (0, $def2de46b9306e8a$export$dbf3
 
 
 class $bf513b85805031e6$export$f7ff0c9b63908086 extends (0, $ab210b2da7b39b9d$export$3f2f9f5909897157) {
-    // private property
-    _hass;
     // reactive properties
     static get properties() {
         return {
@@ -691,6 +689,8 @@ class $bf513b85805031e6$export$f7ff0c9b63908086 extends (0, $ab210b2da7b39b9d$ex
             }
         };
     }
+    // private property
+    _hass;
     // lifecycle
     setConfig(config) {
         this.header = config.header;
@@ -720,7 +720,7 @@ class $bf513b85805031e6$export$f7ff0c9b63908086 extends (0, $ab210b2da7b39b9d$ex
         else content = (0, $f58f44579a4747ac$export$c0bb0b647f701bb5)`
                 <dl class="dl">
                     <dt class="dt">${this.name}</dt>
-                    <dd class="dd" @click="${this.onClick}">
+                    <dd class="dd" @click="${this.doToggle}">
                         <span class="toggle ${this.status}">
                             <span class="button"></span>
                         </span>
@@ -737,7 +737,7 @@ class $bf513b85805031e6$export$f7ff0c9b63908086 extends (0, $ab210b2da7b39b9d$ex
         `;
     }
     // event handling
-    onClick(event) {
+    doToggle(event) {
         this._hass.callService("input_boolean", "toggle", {
             entity_id: this.entity
         });
