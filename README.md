@@ -247,12 +247,12 @@ the previous tutorials. Just `this._config` changed to `this.config`.
 
 ## The card
 
-## Properties
+### Properties
 
 As explained before we don't want to observe the *hass* object as a reactive
 property. Else the card would update for each unrelated change in *hass*.
-Instead we keep a reference to it as a private property. We need it to toggle
-the the state of the helper entity.
+Instead we keep a reference to it as a private property. We will need it to
+toggle the the state of the helper entity.
 
 ```js
     // private property
@@ -362,6 +362,18 @@ the namespace is also shared with the parent classes. Compared to the previous
 tutorials I don't differ lifecycle and jobs anymore for the event listeners.
 With *Lit* I prefer a more declarative structure of the class.
 
+## Event handling
+
+```js
+    // event handling
+
+    doToggle(event) {
+        this._hass.callService("input_boolean", "toggle", {
+            entity_id: this.entity
+        });
+    }
+```
+
 ## Lifecycle
 
 `setConfig(conf)` and `set hass(hass)` are the lifecycle interfaces with *Home
@@ -384,7 +396,7 @@ Assistant*. Here we connect the well chosen reactive properties.
     }
 ```
 
-## Finetuning
+## Fine tuning
 
 There is still an issue. When we edit the entity the preview of the card does
 not update automatically to display the new entity. I think that is a bug (or
