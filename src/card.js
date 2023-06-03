@@ -1,4 +1,4 @@
-import { html, LitElement } from 'lit';
+import { html, LitElement, nothing } from 'lit';
 import styles from './card.styles';
 
 export class ToggleCardLit extends LitElement {
@@ -19,7 +19,7 @@ export class ToggleCardLit extends LitElement {
 
     // lifecycle interface
     setConfig(config) {
-        this._header = config.header;
+        this._header = config.header === "" ? nothing : config.header;
         this._entity = config.entity;
         // call set hass() to immediately adjust to a changed entity
         // while editing the entity in the card editor

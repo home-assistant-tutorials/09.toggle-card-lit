@@ -693,7 +693,7 @@ class $bf513b85805031e6$export$f7ff0c9b63908086 extends (0, $ab210b2da7b39b9d$ex
     }
     // lifecycle interface
     setConfig(config) {
-        this._header = config.header;
+        this._header = config.header === "" ? (0, $f58f44579a4747ac$export$45b790e32b2810ee) : config.header;
         this._entity = config.entity;
         // call set hass() to immediately adjust to a changed entity
         // while editing the entity in the card editor

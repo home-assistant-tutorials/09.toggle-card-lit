@@ -415,7 +415,28 @@ With *Lit* I prefer a more declarative structure of the class.
 
 ## Fine tuning
 
-There is still an issue. When we edit the entity the preview of the card does
+### `nothing`
+
+*Lit* ships a [sentinel value
+`nothing`](https://lit.dev/docs/api/templates/#nothing). One of it features is
+to remove an attribute during rendering.  `<ha-card header="${this._header}">`
+will render to `<ha-card>` if `this._header` is `nothing`.
+
+```js
+import { html, LitElement, nothing } from 'lit';
+
+[ ... ]
+    setConfig(config) {
+        this._header = config.header === "" ? nothing : config.header;
+[ ... ]
+```
+
+If the user configures an empty string for the header, the `header` attribute
+gets dropped from *HTML* output.
+
+### Live update in the editor view
+
+There is still an issue. When we edit the entity, the preview of the card does
 not update automatically to display the new entity. I think that is a bug (or
 missing feature) of *Home Assistant* at the moment of writing.
 
@@ -427,8 +448,7 @@ setting the private reference `this._hass`.
 
 ```js
     setConfig(config) {
-        this._header = config.header;
-        this._entity = config.entity;
+        [ ... ]
         // call set hass() to immediately adjust to a changed entity
         // while editing the entity in the card editor
         if (this._hass) {
